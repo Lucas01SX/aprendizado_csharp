@@ -39,8 +39,12 @@ app.MapGet("/weatherforecast", () =>
 app.MapGet("/", () => "Hello World!");
 
 app.MapGet("/users", () => {
-    Usuario user = new Usuario{Id = Guid.NewGuid() ,Nome = "Lucas", Email = "user@gmail.com"};
-    return user;
+    Guid guid = Guid.NewGuid();
+    Usuario user = new Usuario{Id = guid ,Nome = "Lucas", Email = "user@gmail.com"};
+    Usuario user2 = new Usuario{Id = guid, Nome = "João", Email = "Joao@gmail.com"};
+
+    return user.Equals(user2);
+
 }).WithName("/users");
 
 app.Run();

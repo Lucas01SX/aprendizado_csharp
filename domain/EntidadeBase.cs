@@ -1,6 +1,29 @@
 namespace FinanceiroApi.Domain;
 
-abstract class EntidadeBase<TKey> : IEntidade<TKey>
+abstract class EntidadeBase<TKey> : IEntidade<TKey>, IEquatable<EntidadeBase<TKey>>
 {
     public required TKey Id {get; init;}
+
+    public bool Equals(EntidadeBase<TKey>? other)
+    {
+        if (other is null) return false;
+        
+        if (ReferenceEquals(this, other)) return true;
+
+        return EqualityComparer<TKey>.Default.Equals(Id, other.Id); 
+    }
+    public override bool Equals(object obj)
+    {
+        if (obj is EntidadeBase<TKey> other)
+        {
+            return Equals(other);
+        }
+        return false;
+    }
+    
+    // override object.GetHashCode
+    public override int GetHashCode()
+    {
+        return EqualityComparer<TKey>.Default.GetHashCode(Id);
+    }
 }

@@ -31,3 +31,4 @@
 /home/lucas/projetos/TesteApi/obj/Debug/net10.0/TesteApi.pdb
 /home/lucas/projetos/TesteApi/obj/Debug/net10.0/TesteApi.genruntimeconfig.cache
 /home/lucas/projetos/TesteApi/obj/Debug/net10.0/ref/TesteApi.dll
+/home/lucas/projetos/TesteApi/obj/Debug/net10.0/TesteApi.sourcelink.json
