@@ -12,7 +12,7 @@ abstract class EntidadeBase<TKey> : IEntidade<TKey>, IEquatable<EntidadeBase<TKe
 
         return EqualityComparer<TKey>.Default.Equals(Id, other.Id); 
     }
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj is EntidadeBase<TKey> other)
         {
@@ -24,6 +24,6 @@ abstract class EntidadeBase<TKey> : IEntidade<TKey>, IEquatable<EntidadeBase<TKe
     // override object.GetHashCode
     public override int GetHashCode()
     {
-        return EqualityComparer<TKey>.Default.GetHashCode(Id);
+        return Id is null ? 0 : EqualityComparer<TKey>.Default.GetHashCode(Id);
     }
 }
