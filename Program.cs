@@ -1,10 +1,13 @@
 using FinanceiroApi.Domain;
+using FinanceiroApi.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddSingleton<IRepositorioUsuario, RepositorioUsuarioMemoria>();
+
 
 var app = builder.Build();
 
@@ -46,6 +49,21 @@ app.MapGet("/users", () => {
     return user.Equals(user2);
 
 }).WithName("/users");
+
+
+app.MapGet("/users/processing", (IRepositorioUsuario repo) =>
+{
+    Guid id = Guid.NewGuid();
+    Usuario user = new Usuario{Id=id, Nome = "Lucas", Email="teste@gmail.com"};
+    Usuario user2 = new Usuario{Id=id, Nome = "Lucas Santos", Email="lucas@gmail.com"};
+    Usuario user3 = new Usuario{Id=Guid.NewGuid(), Nome="Pedro", Email="pedro@gmail.com"};
+    List<Usuario> users = new List<Usuario>{user, user2, user3};
+
+    IReadOnlyCollection<Usuario> resultado = repo.ProcessarLista(users);
+
+    return resultado;
+}).WithName("/users/processing");
+
 
 app.Run();
 
