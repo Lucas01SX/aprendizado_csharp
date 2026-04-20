@@ -36,4 +36,7 @@ Definição da camada de domínio com interface genérica `IEntidade<TKey>` e cl
 ### Sprint 3 — Igualdade de objetos por Id
 Implementação de igualdade de entidades baseada exclusivamente no `Id`, independentemente dos demais atributos. Implementa `IEquatable<T>` e sobrescreve `Equals` e `GetHashCode`.
 
+### Sprint 4 — Coleções de alta performance e padrão Repositório
+Introdução ao padrão Repository do DDD e uso de coleções otimizadas por hash. Interface `IRepositorioUsuario` definida no domínio; implementação `RepositorioUsuarioMemoria` na camada de infraestrutura usando `Dictionary<Guid, Usuario>` para busca O(1) por Id e `HashSet<Usuario>` para deduplicação automática baseada no `Equals`/`GetHashCode` da Sprint 3. Registro via injeção de dependência com `AddSingleton`.
+
 > Sprints futuras serão adicionadas conforme o progresso do estudo.
