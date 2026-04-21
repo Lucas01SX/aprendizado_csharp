@@ -2,8 +2,8 @@ namespace FinanceiroApi.Domain;
 
 interface IRepositorioUsuario
 {
-    public void Adicionar(Usuario usuario);
-    public Usuario? ObterPorId(Guid id);
-    public IReadOnlyCollection<Usuario> ProcessarLista(List<Usuario> listaBruta);
-    public IReadOnlyCollection<Usuario> Filtrar(Func<Usuario, bool> filtro);
+    public Task AdicionarAsync(Usuario usuario);
+    public Task<Usuario?> ObterPorIdAsync(Guid id);
+    public Task<IReadOnlyCollection<Usuario>> ProcessarListaAsync(List<Usuario> listaBruta);
+    public Task<IReadOnlyCollection<Usuario>> FiltrarAsync(Func<Usuario, bool> filtro);
 }

@@ -44,38 +44,16 @@ app.MapGet("/weatherforecast", () =>
 
 app.MapGet("/", () => "Hello World!");
 
-app.MapGet("/users", () => {
-    Guid guid = Guid.NewGuid();
-    Usuario user = new Usuario{Id = guid ,Nome = "Lucas", Email = "user@gmail.com"};
-    Usuario user2 = new Usuario{Id = guid, Nome = "João", Email = "Joao@gmail.com"};
 
-    return user.Equals(user2);
-
-}).WithName("/users");
-
-
-app.MapGet("/users/processing", (IRepositorioUsuario repo) =>
-{
-    Guid id = Guid.NewGuid();
-    Usuario user = new Usuario{Id=id, Nome = "Lucas", Email="teste@gmail.com"};
-    Usuario user2 = new Usuario{Id=id, Nome = "Lucas Santos", Email="lucas@gmail.com"};
-    Usuario user3 = new Usuario{Id=Guid.NewGuid(), Nome="Pedro", Email="pedro@gmail.com"};
-    List<Usuario> users = new List<Usuario>{user, user2, user3};
-    IReadOnlyCollection<Usuario> resultado = repo.ProcessarLista(users);
-
-    return resultado;
-}).WithName("/users/processing");
-
-
-app.MapGet("/users/find", (IRepositorioUsuario repo) =>
+app.MapGet("/users/find", async (IRepositorioUsuario repo) =>
 {
     Guid id = Guid.NewGuid();
     Usuario user = new Usuario{Id=id, Nome = "Lucas", Email="teste@gmail.com"};
     Usuario user2 = new Usuario{Id=Guid.NewGuid(), Nome="Pedro", Email="pedro@gmail.com"};
     Func<Usuario, bool> filtro = u => u.Email.Contains("@gmail");
-    repo.Adicionar(user);
-    repo.Adicionar(user2);
-    IReadOnlyCollection<Usuario> usuarios = repo.Filtrar(filtro);
+    await repo.AdicionarAsync(user);
+    await repo.AdicionarAsync(user2);
+    IReadOnlyCollection<Usuario> usuarios = await repo.FiltrarAsync(filtro);
 
     List<UsuarioResponseDto> resultado = usuarios.Select(u => new UsuarioResponseDto(u.Nome, u.Email))
         .ToList();

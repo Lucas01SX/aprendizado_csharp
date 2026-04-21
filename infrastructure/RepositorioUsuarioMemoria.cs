@@ -1,4 +1,3 @@
-
 using FinanceiroApi.Domain;
 
 namespace FinanceiroApi.Infrastructure;
@@ -7,32 +6,28 @@ class RepositorioUsuarioMemoria : IRepositorioUsuario
 {
     private Dictionary<Guid, Usuario> _usuarios = new();
 
-    public void Adicionar(Usuario usuario)
+    public Task AdicionarAsync(Usuario usuario)
     {
-
-        if(!_usuarios.ContainsKey(usuario.Id))
-        {
+        if (!_usuarios.ContainsKey(usuario.Id))
             _usuarios[usuario.Id] = usuario;
-        }
+        return Task.CompletedTask;
     }
 
-    public Usuario? ObterPorId(Guid id)
+    public Task<Usuario?> ObterPorIdAsync(Guid id)
     {
         _usuarios.TryGetValue(id, out Usuario? usuario);
-        return usuario;
-    }
-    public IReadOnlyCollection<Usuario> ProcessarLista(List<Usuario> listaBruta)
-    {
-        HashSet<Usuario> usuariosUnicos = new HashSet<Usuario>(listaBruta);
-        return usuariosUnicos;   
-    } 
-
-    public IReadOnlyCollection<Usuario> Filtrar(Func<Usuario, bool> filtro)
-    {
-        return _usuarios.Values
-            .Where(filtro)
-            .ToList()
-        ;
+        return Task.FromResult(usuario);
     }
 
+    public Task<IReadOnlyCollection<Usuario>> ProcessarListaAsync(List<Usuario> listaBruta)
+    {
+        IReadOnlyCollection<Usuario> resultado = new HashSet<Usuario>(listaBruta);
+        return Task.FromResult(resultado);
+    }
+
+    public Task<IReadOnlyCollection<Usuario>> FiltrarAsync(Func<Usuario, bool> filtro)
+    {
+        IReadOnlyCollection<Usuario> resultado = _usuarios.Values.Where(filtro).ToList();
+        return Task.FromResult(resultado);
+    }
 }

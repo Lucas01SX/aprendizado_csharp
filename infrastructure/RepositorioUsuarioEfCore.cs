@@ -1,25 +1,27 @@
 using FinanceiroApi.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinanceiroApi.Infrastructure;
 
 class RepositorioUsuarioEfCore(AppDbContext context) : IRepositorioUsuario
 {
-    public void Adicionar(Usuario usuario)
+    public async Task AdicionarAsync(Usuario usuario)
     {
         context.Usuarios.Add(usuario);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
     }
-    public Usuario? ObterPorId(Guid id)
+    public async Task<Usuario?> ObterPorIdAsync(Guid id)
     {
-        return context.Usuarios.Find(id);
+        return await context.Usuarios.FindAsync(id);
     }
-    public IReadOnlyCollection<Usuario> ProcessarLista(List<Usuario> usuarios)
+    public Task<IReadOnlyCollection<Usuario>> ProcessarListaAsync(List<Usuario> usuarios)
     {
-        HashSet<Usuario> usuariosUnicos = new HashSet<Usuario>(usuarios);
-        return usuariosUnicos;   
+        IReadOnlyCollection<Usuario> resultado = new HashSet<Usuario>(usuarios);
+        return Task.FromResult(resultado);   
     }
-    public IReadOnlyCollection<Usuario> Filtrar(Func<Usuario, bool> filtro)
+    public async Task<IReadOnlyCollection<Usuario>> FiltrarAsync(Func<Usuario, bool> filtro)
     {
-        return context.Usuarios.Where(filtro).ToList();
+        List<Usuario> todos = await context.Usuarios.ToListAsync();
+        return todos.Where(filtro).ToList();
     }
 }
