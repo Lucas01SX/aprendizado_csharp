@@ -39,4 +39,10 @@ Implementação de igualdade de entidades baseada exclusivamente no `Id`, indepe
 ### Sprint 4 — Coleções de alta performance e padrão Repositório
 Introdução ao padrão Repository do DDD e uso de coleções otimizadas por hash. Interface `IRepositorioUsuario` definida no domínio; implementação `RepositorioUsuarioMemoria` na camada de infraestrutura usando `Dictionary<Guid, Usuario>` para busca O(1) por Id e `HashSet<Usuario>` para deduplicação automática baseada no `Equals`/`GetHashCode` da Sprint 3. Registro via injeção de dependência com `AddSingleton`.
 
+### Sprint 5 — Programação funcional com Delegates, Func e Lambdas
+Introdução a delegates genéricos do .NET (`Func<T, TResult>`) e expressões lambda. Adição do método `Filtrar(Func<Usuario, bool> filtro)` ao repositório, permitindo que qualquer critério de busca seja injetado pela camada superior sem alterar a infraestrutura. Implementação usando LINQ `.Where(filtro)` diretamente sobre os valores do dicionário.
+
+### Sprint 6 — Transformação de dados com LINQ e DTOs
+Introdução ao padrão DTO (Data Transfer Object) e projeções LINQ com `.Select()`. Criação de `UsuarioResponseDto` como `record` imutável na camada `dtos/`, expondo apenas `Nome` e `Email`. Endpoints passaram a retornar DTOs em vez de entidades de domínio, desacoplando o contrato da API da estrutura interna do domínio.
+
 > Sprints futuras serão adicionadas conforme o progresso do estudo.

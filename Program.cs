@@ -1,5 +1,6 @@
 using FinanceiroApi.Domain;
 using FinanceiroApi.Infrastructure;
+using FinanceiroApi.Dtos;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +59,6 @@ app.MapGet("/users/processing", (IRepositorioUsuario repo) =>
     Usuario user2 = new Usuario{Id=id, Nome = "Lucas Santos", Email="lucas@gmail.com"};
     Usuario user3 = new Usuario{Id=Guid.NewGuid(), Nome="Pedro", Email="pedro@gmail.com"};
     List<Usuario> users = new List<Usuario>{user, user2, user3};
-
     IReadOnlyCollection<Usuario> resultado = repo.ProcessarLista(users);
 
     return resultado;
@@ -73,8 +73,10 @@ app.MapGet("/users/find", (IRepositorioUsuario repo) =>
     Func<Usuario, bool> filtro = u => u.Email.Contains("@gmail");
     repo.Adicionar(user);
     repo.Adicionar(user2);
+    IReadOnlyCollection<Usuario> usuarios = repo.Filtrar(filtro);
 
-    IReadOnlyCollection<Usuario> resultado = repo.Filtrar(filtro);
+    List<UsuarioResponseDto> resultado = usuarios.Select(u => new UsuarioResponseDto(u.Nome, u.Email))
+        .ToList();
 
     return resultado;
 }).WithName("/users/find");
