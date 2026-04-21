@@ -45,4 +45,7 @@ Introdução a delegates genéricos do .NET (`Func<T, TResult>`) e expressões l
 ### Sprint 6 — Transformação de dados com LINQ e DTOs
 Introdução ao padrão DTO (Data Transfer Object) e projeções LINQ com `.Select()`. Criação de `UsuarioResponseDto` como `record` imutável na camada `dtos/`, expondo apenas `Nome` e `Email`. Endpoints passaram a retornar DTOs em vez de entidades de domínio, desacoplando o contrato da API da estrutura interna do domínio.
 
+### Sprint 7 — Persistência com Entity Framework Core e SQLite
+Substituição do repositório em memória por persistência real usando Entity Framework Core com SQLite. Criação de `AppDbContext` herdando de `DbContext` com primary constructor (C# 12) e `DbSet<Usuario>`. Implementação de `RepositorioUsuarioEfCore` substituindo `RepositorioUsuarioMemoria`, com registro via `AddScoped` (ciclo de vida por request, adequado para DbContext). Migrations geradas com `dotnet ef migrations add` criam o esquema do banco automaticamente a partir do modelo de domínio — sem SQL manual. Ponto de atenção: `Filtrar(Func<Usuario, bool>)` causa avaliação client-side (sem `WHERE` no SQL gerado); `Expression<Func<Usuario, bool>>` seria necessário para tradução para SQL — candidato à próxima sprint.
+
 > Sprints futuras serão adicionadas conforme o progresso do estudo.

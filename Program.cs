@@ -1,13 +1,15 @@
 using FinanceiroApi.Domain;
 using FinanceiroApi.Infrastructure;
 using FinanceiroApi.Dtos;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddSingleton<IRepositorioUsuario, RepositorioUsuarioMemoria>();
+builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite("Data Source=Financeiro.db"));
+builder.Services.AddScoped<IRepositorioUsuario, RepositorioUsuarioEfCore>();
 
 
 var app = builder.Build();

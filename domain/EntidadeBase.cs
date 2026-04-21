@@ -2,7 +2,9 @@ namespace FinanceiroApi.Domain;
 
 abstract class EntidadeBase<TKey> : IEntidade<TKey>, IEquatable<EntidadeBase<TKey>>
 {
-    public required TKey Id {get; init;}
+    protected EntidadeBase() {}
+
+    public TKey Id {get; init;} = default!; 
 
     public bool Equals(EntidadeBase<TKey>? other)
     {
