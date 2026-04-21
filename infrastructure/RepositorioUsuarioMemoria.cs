@@ -26,4 +26,13 @@ class RepositorioUsuarioMemoria : IRepositorioUsuario
         HashSet<Usuario> usuariosUnicos = new HashSet<Usuario>(listaBruta);
         return usuariosUnicos;   
     } 
+
+    public IReadOnlyCollection<Usuario> Filtrar(Func<Usuario, bool> filtro)
+    {
+        return _usuarios.Values
+            .Where(filtro)
+            .ToList()
+        ;
+    }
+
 }

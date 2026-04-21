@@ -65,6 +65,20 @@ app.MapGet("/users/processing", (IRepositorioUsuario repo) =>
 }).WithName("/users/processing");
 
 
+app.MapGet("/users/find", (IRepositorioUsuario repo) =>
+{
+    Guid id = Guid.NewGuid();
+    Usuario user = new Usuario{Id=id, Nome = "Lucas", Email="teste@gmail.com"};
+    Usuario user2 = new Usuario{Id=Guid.NewGuid(), Nome="Pedro", Email="pedro@gmail.com"};
+    Func<Usuario, bool> filtro = u => u.Email.Contains("@gmail");
+    repo.Adicionar(user);
+    repo.Adicionar(user2);
+
+    IReadOnlyCollection<Usuario> resultado = repo.Filtrar(filtro);
+
+    return resultado;
+}).WithName("/users/find");
+
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
