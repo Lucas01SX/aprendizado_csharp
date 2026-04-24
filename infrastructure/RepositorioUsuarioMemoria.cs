@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using FinanceiroApi.Domain;
 
 namespace FinanceiroApi.Infrastructure;
@@ -25,9 +26,9 @@ class RepositorioUsuarioMemoria : IRepositorioUsuario
         return Task.FromResult(resultado);
     }
 
-    public Task<IReadOnlyCollection<Usuario>> FiltrarAsync(Func<Usuario, bool> filtro)
+    public Task<IReadOnlyCollection<Usuario>> FiltrarAsync(Expression<Func<Usuario, bool>> filtro)
     {
-        IReadOnlyCollection<Usuario> resultado = _usuarios.Values.Where(filtro).ToList();
+        IReadOnlyCollection<Usuario> resultado = _usuarios.Values.Where(filtro.Compile()).ToList();
         return Task.FromResult(resultado);
     }
 }

@@ -1,5 +1,6 @@
 using FinanceiroApi.Domain;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace FinanceiroApi.Infrastructure;
 
@@ -19,9 +20,8 @@ class RepositorioUsuarioEfCore(AppDbContext context) : IRepositorioUsuario
         IReadOnlyCollection<Usuario> resultado = new HashSet<Usuario>(usuarios);
         return Task.FromResult(resultado);   
     }
-    public async Task<IReadOnlyCollection<Usuario>> FiltrarAsync(Func<Usuario, bool> filtro)
+    public async Task<IReadOnlyCollection<Usuario>> FiltrarAsync(Expression<Func<Usuario, bool>> filtro)
     {
-        List<Usuario> todos = await context.Usuarios.ToListAsync();
-        return todos.Where(filtro).ToList();
+        return await context.Usuarios.Where(filtro).ToListAsync();
     }
 }

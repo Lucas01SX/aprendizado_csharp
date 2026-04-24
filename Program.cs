@@ -45,6 +45,13 @@ app.MapGet("/weatherforecast", () =>
 
 app.MapGet("/", () => "Hello World!");
 
+app.MapGet("/users", async (IRepositorioUsuario repo) =>
+{
+    IReadOnlyCollection<Usuario> usuarios = await repo.FiltrarAsync(u => true);
+    List<UsuarioResponseDto> resultado = usuarios.Select(u => new UsuarioResponseDto(u.Nome, u.Email)).ToList();
+    return resultado;
+}).WithName("GetUsers");
+
 app.MapPost("/users", async (CriarUsuarioDto createDto, IRepositorioUsuario repo) => {
 
     ValidationContext validationContext = new ValidationContext(createDto);
