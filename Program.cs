@@ -2,6 +2,7 @@ using FinanceiroApi.Domain;
 using FinanceiroApi.Infrastructure;
 using FinanceiroApi.Dtos;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite("Data Source=Financeiro.db"));
 builder.Services.AddScoped<IRepositorioUsuario, RepositorioUsuarioEfCore>();
-
+builder.Services.AddValidation();
 
 var app = builder.Build();
 
@@ -44,22 +45,34 @@ app.MapGet("/weatherforecast", () =>
 
 app.MapGet("/", () => "Hello World!");
 
+app.MapPost("/users", async (CriarUsuarioDto createDto, IRepositorioUsuario repo) => {
 
-app.MapGet("/users/find", async (IRepositorioUsuario repo) =>
-{
-    Guid id = Guid.NewGuid();
-    Usuario user = new Usuario{Id=id, Nome = "Lucas", Email="teste@gmail.com"};
-    Usuario user2 = new Usuario{Id=Guid.NewGuid(), Nome="Pedro", Email="pedro@gmail.com"};
-    Func<Usuario, bool> filtro = u => u.Email.Contains("@gmail");
-    await repo.AdicionarAsync(user);
-    await repo.AdicionarAsync(user2);
-    IReadOnlyCollection<Usuario> usuarios = await repo.FiltrarAsync(filtro);
+    ValidationContext validationContext = new ValidationContext(createDto);
+    List<ValidationResult> validationResults = new List<ValidationResult>();
 
-    List<UsuarioResponseDto> resultado = usuarios.Select(u => new UsuarioResponseDto(u.Nome, u.Email))
-        .ToList();
+    bool isValid = Validator.TryValidateObject(createDto, validationContext, validationResults, true);
 
-    return resultado;
-}).WithName("/users/find");
+    if(!isValid)
+    {
+        return Results.ValidationProblem(
+            validationResults.ToDictionary(
+                r => r.MemberNames.FirstOrDefault() ?? string.Empty,
+                r => new[] { r.ErrorMessage ?? string.Empty }
+            )
+        );
+    }
+
+    Usuario usuario = new Usuario
+    {
+        Id = Guid.NewGuid(),
+        Nome = createDto.Nome,
+        Email = createDto.Email
+    };
+
+    await repo.AdicionarAsync(usuario);
+
+    return Results.Created($"/users/{usuario.Id}", new UsuarioResponseDto(usuario.Nome, usuario.Email));
+});
 
 app.Run();
 
