@@ -14,5 +14,10 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.7" />
   </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>FinanceiroApi.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 
 </Project>
