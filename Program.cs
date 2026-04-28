@@ -3,6 +3,14 @@ using FinanceiroApi.Infrastructure;
 using FinanceiroApi.Dtos;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
+//// VARIÁVEIS DE AMBIENTE
+DotNetEnv.Env.Load();
+string jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET")!;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +20,22 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite("Data Source=Financeiro.db"));
 builder.Services.AddScoped<IRepositorioUsuario, RepositorioUsuarioEfCore>();
 builder.Services.AddValidation();
+builder.Services.AddSingleton(new TokenService(jwtSecret));
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(opt =>
+    {
+        opt.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret)),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+
 
 var app = builder.Build();
 
@@ -22,6 +46,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+
 
 var summaries = new[]
 {
@@ -50,7 +77,7 @@ app.MapGet("/users", async (IRepositorioUsuario repo) =>
     IReadOnlyCollection<Usuario> usuarios = await repo.FiltrarAsync(u => true);
     List<UsuarioResponseDto> resultado = usuarios.Select(u => new UsuarioResponseDto(u.Nome, u.Email)).ToList();
     return resultado;
-}).WithName("GetUsers");
+}).WithName("GetUsers").RequireAuthorization();
 
 app.MapPost("/users", async (CriarUsuarioDto createDto, IRepositorioUsuario repo) => {
 
@@ -79,7 +106,21 @@ app.MapPost("/users", async (CriarUsuarioDto createDto, IRepositorioUsuario repo
     await repo.AdicionarAsync(usuario);
 
     return Results.Created($"/users/{usuario.Id}", new UsuarioResponseDto(usuario.Nome, usuario.Email));
+}).RequireAuthorization();
+
+app.MapPost("/login", (LoginDto dto, TokenService tokenService) =>
+{
+    if (dto.Email == "admin@financeiro.com" && dto.Senha == "senha123")
+    {
+        string token = tokenService.GerarToken(dto.Email);
+        return Results.Ok(new TokenResponseDto(token));
+    } else
+    {
+        return Results.Unauthorized();
+    }
 });
+
+
 
 app.Run();
 
