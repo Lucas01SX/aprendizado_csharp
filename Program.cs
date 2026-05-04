@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 
 //// VARIÁVEIS DE AMBIENTE
@@ -33,7 +34,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(opt =>
+    opt.AddPolicy("SomenteAdmin", p => p.RequireRole("Admin"))
+);
 
 
 
@@ -77,7 +80,7 @@ app.MapGet("/users", async (IRepositorioUsuario repo) =>
     IReadOnlyCollection<Usuario> usuarios = await repo.FiltrarAsync(u => true);
     List<UsuarioResponseDto> resultado = usuarios.Select(u => new UsuarioResponseDto(u.Nome, u.Email)).ToList();
     return resultado;
-}).WithName("GetUsers").RequireAuthorization();
+}).WithName("GetUsers").RequireAuthorization("SomenteAdmin");
 
 app.MapPost("/users", async (CriarUsuarioDto createDto, IRepositorioUsuario repo) => {
 
@@ -106,19 +109,31 @@ app.MapPost("/users", async (CriarUsuarioDto createDto, IRepositorioUsuario repo
     await repo.AdicionarAsync(usuario);
 
     return Results.Created($"/users/{usuario.Id}", new UsuarioResponseDto(usuario.Nome, usuario.Email));
-}).RequireAuthorization();
+}).RequireAuthorization("SomenteAdmin");
 
 app.MapPost("/login", (LoginDto dto, TokenService tokenService) =>
 {
-    if (dto.Email == "admin@financeiro.com" && dto.Senha == "senha123")
+    if (dto.Senha != "senha123") return Results.Unauthorized();
+
+    string? role = dto.Email switch
     {
-        string token = tokenService.GerarToken(dto.Email);
-        return Results.Ok(new TokenResponseDto(token));
-    } else
-    {
-        return Results.Unauthorized();
-    }
+        "admin@financeiro.com" => "Admin",
+        "user@financeiro.com"  => "UsuarioComum",
+        _                      => null
+    };
+
+    if (role is null) return Results.Unauthorized();
+
+    string token = tokenService.GerarToken(dto.Email, role);
+    return Results.Ok(new TokenResponseDto(token));
 });
+
+app.MapGet("/me", (ClaimsPrincipal user) =>
+{
+    string email = user.FindFirst(ClaimTypes.Email)!.Value;
+    string role  = user.FindFirst(ClaimTypes.Role)!.Value;
+    return Results.Ok(new UsuarioLogadoDto(email, role));
+}).RequireAuthorization();
 
 
 

@@ -9,16 +9,17 @@ internal class TokenService (string segredo)
 {
     private readonly string _segredo = segredo;
 
-    public string GerarToken(string email)
+    public string GerarToken(string email, string role = "UsuarioComum")
     {
         JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
         byte[] key = Encoding.ASCII.GetBytes(_segredo);
-        
+
         SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new Claim[]
             {
-                new Claim(ClaimTypes.Email, email)
+                new Claim(ClaimTypes.Email, email),
+                new Claim(ClaimTypes.Role, role)
             }),
             Expires = DateTime.UtcNow.AddMinutes(60),
             SigningCredentials = new SigningCredentials(
