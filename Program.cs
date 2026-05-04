@@ -20,6 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite("Data Source=Financeiro.db"));
 builder.Services.AddScoped<IRepositorioUsuario, RepositorioUsuarioEfCore>();
+builder.Services.AddScoped<IRepositorioTransacao, RepositorioTransacaoEfCore>();
 builder.Services.AddValidation();
 builder.Services.AddSingleton(new TokenService(jwtSecret));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -136,6 +137,34 @@ app.MapGet("/me", (ClaimsPrincipal user) =>
 }).RequireAuthorization();
 
 
+
+app.MapPost("/transactions", async (
+    CriarTransacaoDto dto,
+    ClaimsPrincipal user,
+    IRepositorioUsuario repoUsuario,
+    IRepositorioTransacao repoTransacao) =>
+{
+    string email = user.FindFirst(ClaimTypes.Email)!.Value;
+    IReadOnlyCollection<Usuario> encontrados = await repoUsuario.FiltrarAsync(u => u.Email == email);
+    Usuario? usuario = encontrados.FirstOrDefault();
+
+    if (usuario is null) return Results.NotFound();
+
+    Transacao transacao = new Transacao
+    {
+        Id        = Guid.NewGuid(),
+        Descricao = dto.Descricao,
+        Valor     = dto.Valor,
+        Data      = dto.Data,
+        UsuarioId = usuario.Id
+    };
+
+    await repoTransacao.AdicionarAsync(transacao);
+    return Results.Created(
+        $"/transactions/{transacao.Id}",
+        new TransacaoResponseDto(transacao.Id, transacao.Descricao, transacao.Valor, transacao.Data)
+    );
+}).RequireAuthorization();
 
 app.Run();
 
