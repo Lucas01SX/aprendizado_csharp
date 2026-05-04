@@ -38,6 +38,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization(opt =>
     opt.AddPolicy("SomenteAdmin", p => p.RequireRole("Admin"))
 );
+builder.Services.AddProblemDetails();
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<AppDbContext>();
 
 
 
@@ -49,6 +52,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -112,9 +116,13 @@ app.MapPost("/users", async (CriarUsuarioDto createDto, IRepositorioUsuario repo
     return Results.Created($"/users/{usuario.Id}", new UsuarioResponseDto(usuario.Nome, usuario.Email));
 }).RequireAuthorization("SomenteAdmin");
 
-app.MapPost("/login", (LoginDto dto, TokenService tokenService) =>
+app.MapPost("/login", (LoginDto dto, TokenService tokenService, ILogger<Program> logger) =>
 {
-    if (dto.Senha != "senha123") return Results.Unauthorized();
+    if (dto.Senha != "senha123")
+    {
+        logger.LogWarning("Tentativa de login falhou: {Email}", dto.Email);
+        return Results.Unauthorized();
+    }
 
     string? role = dto.Email switch
     {
@@ -123,9 +131,14 @@ app.MapPost("/login", (LoginDto dto, TokenService tokenService) =>
         _                      => null
     };
 
-    if (role is null) return Results.Unauthorized();
+    if (role is null)
+    {
+        logger.LogWarning("Email não reconhecido na tentativa de login: {Email}", dto.Email);
+        return Results.Unauthorized();
+    }
 
     string token = tokenService.GerarToken(dto.Email, role);
+    logger.LogInformation("Login realizado com sucesso: {Email} ({Role})", dto.Email, role);
     return Results.Ok(new TokenResponseDto(token));
 });
 
@@ -142,13 +155,18 @@ app.MapPost("/transactions", async (
     CriarTransacaoDto dto,
     ClaimsPrincipal user,
     IRepositorioUsuario repoUsuario,
-    IRepositorioTransacao repoTransacao) =>
+    IRepositorioTransacao repoTransacao,
+    ILogger<Program> logger) =>
 {
     string email = user.FindFirst(ClaimTypes.Email)!.Value;
     IReadOnlyCollection<Usuario> encontrados = await repoUsuario.FiltrarAsync(u => u.Email == email);
     Usuario? usuario = encontrados.FirstOrDefault();
 
-    if (usuario is null) return Results.NotFound();
+    if (usuario is null)
+    {
+        logger.LogWarning("Transação rejeitada: usuário não encontrado no banco para {Email}", email);
+        return Results.NotFound();
+    }
 
     Transacao transacao = new Transacao
     {
@@ -160,11 +178,14 @@ app.MapPost("/transactions", async (
     };
 
     await repoTransacao.AdicionarAsync(transacao);
+    logger.LogInformation("Transação criada: {TransacaoId} para {Email}, valor {Valor}", transacao.Id, email, transacao.Valor);
     return Results.Created(
         $"/transactions/{transacao.Id}",
         new TransacaoResponseDto(transacao.Id, transacao.Descricao, transacao.Valor, transacao.Data)
     );
 }).RequireAuthorization();
+
+app.MapHealthChecks("/health");
 
 app.Run();
 
